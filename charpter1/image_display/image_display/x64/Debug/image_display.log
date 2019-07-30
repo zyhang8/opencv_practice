@@ -1,0 +1,3 @@
+﻿  image_display.cpp
+C:\OpenCV3_practice\charpter1\【2】图像显示\image_display\image_display.cpp(8,1): warning C4326:  “main”的返回类型应为“int”而非“void”
+  image_display.vcxproj -> C:\OpenCV3_practice\charpter1\【2】图像显示\image_display\x64\Debug\image_display.exe
