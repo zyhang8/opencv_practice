@@ -30,6 +30,8 @@ Mathjax:
 
 opencv_world346d.lib
 
+> 其中，exp为实验内容，charpter为书籍实战
+
 >my blog: [https://zyhang8.github.io/2019/07/30/opencv-vs2019-win-config/](https://zyhang8.github.io/2019/07/30/opencv-vs2019-win-config/)
 
 <blockquote style="margin: 2em 0 0;padding: 0.5em 1em;border-left: 3px solid #F44336;background-color: #F5F5F5;list-style: none;"><p> <strong>本文使用 <a href="https://creativecommons.org/licenses/by-nc-sa/3.0/cn/">CC BY-NC-SA 3.0 中国大陆</a> 协议许可<br>具体请参见 <a href="https://zyhang8.github.io/agree/">知识共享协议</a></strong><br> <strong>本文链接：</strong><a href="https://zyhang8.github.io/2019/07/30/opencv-vs2019-win-config/">https://zyhang8.github.io/2019/07/30/opencv-vs2019-win-config/</a></p></blockquote>
