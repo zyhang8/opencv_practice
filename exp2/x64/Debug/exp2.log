@@ -1,0 +1,4 @@
+﻿  exp2.cpp
+C:\software\opencv\opencv\build\include\opencv2\core\mat.inl.hpp(1186,147): error C3872:  “0x3002”: 此字符不允许在标识符中使用
+C:\software\opencv\opencv\build\include\opencv2\core\mat.inl.hpp(1186,21): error C2760:  语法错误: 意外标记 "标识符"，应为 ";"
+C:\software\opencv\opencv\build\include\opencv2\core\mat.inl.hpp(1186,21): message :  此诊断出现在编译器生成的函数“const _Tp &cv::Mat::at(int,int) const”中

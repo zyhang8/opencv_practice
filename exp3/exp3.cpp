@@ -13,6 +13,14 @@ int j;
 //data 进行处理的像素集合
 //grayscale 目标灰度级
 //rows cols type 目标图像的行，列，以及类型
+
+int gray[256] = { 0 };  //记录每个灰度级别下的像素个数
+double gray_prob[256] = { 0 };  //记录灰度分布密度
+double gray_distribution[256] = { 0 }; //记录累计密度
+int gray_equal[256] = { 0 }; //均衡化后的灰度值
+
+int gray_sum = 0; //像素总数
+
 Mat Normalize(vector<double> data, int grayscale, int rows, int cols, int type)
 {
 	double max = 0.0;
@@ -58,61 +66,108 @@ Mat PowerTranseform(Mat src, double gamma, int parameter)
 
 
 // 双线性插值
-Mat Bilinear(Mat img, double width, double height)
-{
-	cv::Mat matDst1, matDst2;
-	matDst1 = cv::Mat(cv::Size(width, height), img.type(), cv::Scalar::all(0));
-	matDst2 = cv::Mat(matDst1.size(), img.type(), cv::Scalar::all(0));
-
-	double scale_x = (double)img.cols / matDst1.cols;
-	double scale_y = (double)img.rows / matDst1.rows;
-
-	uchar* dataDst = matDst1.data;
-	int stepDst = matDst1.step;
-	uchar* dataSrc = img.data;
-	int stepSrc = img.step;
-	int iWidthSrc = img.cols;
-	int iHiehgtSrc = img.rows;
-
-	for (int j = 0; j < matDst1.rows; ++j)
-	{
-		float fy = (float)((j + 0.5) * scale_y - 0.5);
-		int sy = cvFloor(fy);
-		fy -= sy;
-		sy = std::min(sy, iHiehgtSrc - 2);
-		sy = std::max(0, sy);
-
-		short cbufy[2];
-		cbufy[0] = cv::saturate_cast<short>((1.f - fy) * 2048);
-		cbufy[1] = 2048 - cbufy[0];
-
-		for (int i = 0; i < matDst1.cols; ++i)
-		{
-			float fx = (float)((i + 0.5) * scale_x - 0.5);
-			int sx = cvFloor(fx);
-			fx -= sx;
-
-			if (sx < 0) {
-				fx = 0, sx = 0;
-			}
-			if (sx >= iWidthSrc - 1) {
-				fx = 0, sx = iWidthSrc - 2;
-			}
-
-			short cbufx[2];
-			cbufx[0] = cv::saturate_cast<short>((1.f - fx) * 2048);
-			cbufx[1] = 2048 - cbufx[0];
-
-			for (int k = 0; k < img.channels(); ++k)
-			{
-				*(dataDst + j * stepDst + 3 * i + k) = (*(dataSrc + sy * stepSrc + 3 * sx + k) * cbufx[0] * cbufy[0] +
-					*(dataSrc + (sy + 1) * stepSrc + 3 * sx + k) * cbufx[0] * cbufy[1] +
-					*(dataSrc + sy * stepSrc + 3 * (sx + 1) + k) * cbufx[1] * cbufy[0] +
-					*(dataSrc + (sy + 1) * stepSrc + 3 * (sx + 1) + k) * cbufx[1] * cbufy[1]) >> 22;
-			}
+Mat bilinear(Mat src, int row, int col) {
+	int rows = src.rows, cols = src.cols;
+	cv::Mat dst(row, col, src.type());
+	for (int i = 0; i < row; ++i) {
+		//以ptr的方式访问dst的数据
+		uchar* p = dst.ptr<uchar>(i);
+		//使两个图像的几何中心重合，采样更合理
+		float x = (i + 0.5) * rows / row - 0.5;
+		int fx = (int)x;
+		//x为坐标的小数部分
+		x -= fx;
+		//以整数计算速度更快
+		short x1 = (1.f - x) * 2048;
+		short x2 = 2048 - x1;
+		for (int j = 0; j < col; ++j) {
+			//trick
+			float y = (j + 0.5) * cols / col - 0.5;
+			int fy = (int)y;
+			y -= fy;
+			//trick
+			short y1 = (1.f - y) * 2048;
+			short y2 = 2048 - y1;
+			//结果右移22位抵消2048的平方
+			p[j] = (src.at<uchar>(fx, fy) * x1 * y1 + src.at<uchar>(fx + 1, fy) * x2 * y1
+				+ src.at<uchar>(fx, fy + 1) * x1 * y2 + src.at<uchar>(fx + 1, fy + 1) * x2 * y2) >> 22;
 		}
 	}
-	return matDst1;
+	return dst;
+}
+
+Mat equalize_hist(Mat& input)
+{
+	Mat output = input.clone();
+	gray_sum = input.cols * input.rows;
+
+	//统计每个灰度下的像素个数
+	for (int i = 0; i < input.rows; i++)
+	{
+		uchar* p = input.ptr<uchar>(i);
+		for (int j = 0; j < input.cols; j++)
+		{
+			int vaule = p[j];
+			//cout << input.cols*i+j << ':'<< vaule << endl;
+			gray[vaule]++;
+		}
+	}
+	//统计灰度频率
+	for (int i = 0; i < 256; i++)
+	{
+		gray_prob[i] = ((double)gray[i] / gray_sum);
+		cout << i + 1 << ':' << gray_prob[i] * gray_sum << endl;
+	}
+	return output;
+}
+
+//均值化
+void histBar(Mat src)
+{
+	int histSize = 30;
+	MatND hist;
+	float range[] = { 0, 255 };
+	const float* ranges = { range };
+	//计算直方图
+	calcHist(&src, 1, 0, Mat(), hist, 1, &histSize, &ranges, true, false);
+	//将直方图bin的数值归一化到0-255
+	normalize(hist, hist, 0, 255, NORM_MINMAX, -1, Mat());
+
+	//显示直方图
+	int binsW = cvRound((double)500 / histSize);
+	Mat histImg = Mat::zeros(500, 500, CV_8UC3);
+	RNG rng(123);
+	for (int i = 0; i < histSize; i++)
+	{
+		Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
+		rectangle(histImg, Point(i * binsW, 500), Point((i + 1) * binsW, 500 - cvRound(hist.at<float>(i) * 500 / 255.0)), color, -1);
+	}
+	imshow("histogram", histImg);
+}
+
+void sharpen(const Mat image, Mat& result)
+{
+	result.create(image.size(), image.type());
+	for (int j = 1; j < image.rows - 1; j++)
+	{
+		const uchar* previous = image.ptr<const uchar>(j - 1);
+		const uchar* current = image.ptr<const uchar>(j);
+		const uchar* next = image.ptr<const uchar>(j + 1);
+
+		uchar* output = result.ptr<uchar>(j);
+		for (int i = 1; i < image.cols - 1; i++)
+		{
+			//sharpened_pixel=5*current-left-right-up-down;
+			//cv::saturate_cast用以对计算结果进行截断(0-255)
+			*output++ = saturate_cast<uchar>(
+				5 * current[i] - current[i - 1]
+				- current[i + 1] - previous[i] - next[i]);
+		}
+	}
+	result.row(0).setTo(Scalar(0));
+	result.row(result.rows - 1).setTo(Scalar(0));
+	result.col(0).setTo(Scalar(0));
+	result.col(result.cols - 1).setTo(Scalar(0));
 }
 
 int main()
@@ -121,7 +176,9 @@ int main()
 	int row = img.rows;//获取行数
 	int col = img.cols * img.channels();//注意是列数*通道数
 	cout << row << "," << col << endl;
-	ofstream ofs("pixel.txt");
+	equalize_hist(img);
+
+	/*ofstream ofs("pixel.txt");
 	for (int i = 0; i < row; ++i)
 	{
 		uchar* data = img.ptr<uchar>(i);//获取第i行首地址
@@ -135,21 +192,16 @@ int main()
 	cout << row << "," << col << endl;
 	cout << "遍历完毕" << endl;
 	cout << endl;
-	ofs.close();
+	ofs.close();*/
 
 	//显示原图
 	imshow("img", img);
+	
+	Mat dst;
+	bitwise_not(img, dst, noArray());
 
-	//图像反转(直接访问像素)
-	for (i = 0; i < row; i++)
-	{
-		for (j = 0; j < col; j++)
-		{
-			img.at<uchar>(i, j) = 255 - img.at<uchar>(i, j);   // 每一个像素反转
-		}
-	}
-	//显示图片
-	imshow("dst", img);
+	//show image 
+	imshow("dst", dst);
 
 	//幂律变换
 	Mat dstImg;
@@ -157,12 +209,77 @@ int main()
 	imshow("变换后", dstImg);
 
 	// 双线性插值
-	scale1 = Bilinear(img, row * 1.5, col * 1.5);
+	Mat scale1, scale2;
+	/*scale1 = bilinear(img, row * 1.5, col * 1.5);
 	imshow("1.5", scale1);
-	cv::imwrite("1.5.jpg", scale1);
-	scale2 = Bilinear(img, row * 0.8, col * 0.8);
+	cv::imwrite("1.5.jpg", scale1);*/
+	Mat dst_img1,dst_img2;
+	// 双线性插值(resize和源算法)
+	resize(img, dst_img1, Size(), 1.5, 1.5);
+	imshow("resize_1.5", dst_img1);
+	imwrite("resize_1.5.jpg", dst_img1);
+	resize(img, dst_img2, Size(), 0.8, 0.8);
+	imshow("resize_0.8", dst_img2);
+	imwrite("resize_0.8.jpg", dst_img2);
+	scale2 = bilinear(img, row * 0.8, col * 0.8);
 	imshow("0.8", scale2);
-	cv::imwrite("0.8.jpg", scale2);
+	imwrite("0.8.jpg", scale2);
+
+	histBar(img);
+
+	//进行均值滤波操作
+	Mat out;
+	blur(img, out, Size(3, 3));
+	imshow("均值滤波3*3", out);
+	blur(img, out, Size(5, 5));
+	imshow("均值滤波5*5", out);
+	blur(img, out, Size(7, 7));
+	imshow("均值滤波7*7", out);
+
+	//进行均值滤波操作
+	Mat g_mDstImage;
+	medianBlur(img, g_mDstImage, 3);
+	imshow("中值滤波3*3", out);
+	medianBlur(img, g_mDstImage, 5);
+	imshow("中值滤波5*5", out);
+	medianBlur(img, g_mDstImage, 7);
+	imshow("中值滤波7*7", out);
+	
+
+	//边缘检测
+	//sobel算子
+	Mat gao_src, gray_src, xdst, ydst, dst_sobel;
+	/*GaussianBlur(img, gao_src, Size(3, 3), 0, 0);//高斯滤波
+	/imshow("gaosioutput", gao_src);
+	cvtColor(gao_src, gray_src, CV_RGB2GRAY);
+	//imshow("grayoutput", gray_src);//转换为灰度图*/
+	Sobel(img, xdst, -1, 1, 0);
+	imshow("xdst", xdst);
+	Sobel(img, ydst, -1, 0, 1);
+	imshow("ydst", ydst);
+	addWeighted(xdst, 0.5, ydst, 0.5, 1, dst_sobel);
+	imshow("sobel", dst_sobel);
+	//拉普拉斯算子
+	Mat gaosrc, graysrc, ladst, dst_la;
+	/*GaussianBlur(img, gaosrc, Size(3, 3), 0);
+	//imshow("gaosrc", gaosrc);
+	cvtColor(gaosrc, graysrc, CV_RGB2GRAY);
+	//imshow("graysrc", graysrc);*/
+	Laplacian(img, ladst, -1);
+	//imshow("ladst", ladst);
+	convertScaleAbs(ladst, dst_la);
+	imshow("la", dst_la);
+
+	//锐化
+	//拉普拉斯算子
+	Mat la_dst, sobel_dst;
+	la_dst.create(img.size(), img.type());
+	sharpen(img, la_dst);
+	imshow("sharpen_la", la_dst);
+	//sobel算子
+	//Generate Gradient X
+	
+	//imshow("sharpen_la", sobel_dst);
 
 	waitKey(0); // 无限制的等待用户的按键事件
 	return 0;

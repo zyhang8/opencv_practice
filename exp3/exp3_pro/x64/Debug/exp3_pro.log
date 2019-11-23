@@ -1,0 +1,14 @@
+﻿  exp3_pro.cpp
+C:\software\opencv\opencv\build\include\opencv2\core\mat.inl.hpp(1186,147): error C3872:  “0x3002”: 此字符不允许在标识符中使用
+\\Mac\桌面\github\opencv_practice\exp3\exp3_pro\exp3_pro.cpp(64,36): warning C4244:  “参数”: 从“double”转换到“_Tp”，可能丢失数据
+\\Mac\桌面\github\opencv_practice\exp3\exp3_pro\exp3_pro.cpp(64,36): warning C4244:         with
+\\Mac\桌面\github\opencv_practice\exp3\exp3_pro\exp3_pro.cpp(64,36): warning C4244:         [
+\\Mac\桌面\github\opencv_practice\exp3\exp3_pro\exp3_pro.cpp(64,36): warning C4244:             _Tp=int
+\\Mac\桌面\github\opencv_practice\exp3\exp3_pro\exp3_pro.cpp(64,36): warning C4244:         ]
+\\Mac\桌面\github\opencv_practice\exp3\exp3_pro\exp3_pro.cpp(64,29): warning C4244:  “参数”: 从“double”转换到“_Tp”，可能丢失数据
+\\Mac\桌面\github\opencv_practice\exp3\exp3_pro\exp3_pro.cpp(64,29): warning C4244:         with
+\\Mac\桌面\github\opencv_practice\exp3\exp3_pro\exp3_pro.cpp(64,29): warning C4244:         [
+\\Mac\桌面\github\opencv_practice\exp3\exp3_pro\exp3_pro.cpp(64,29): warning C4244:             _Tp=int
+\\Mac\桌面\github\opencv_practice\exp3\exp3_pro\exp3_pro.cpp(64,29): warning C4244:         ]
+\\Mac\桌面\github\opencv_practice\exp3\exp3_pro\exp3_pro.cpp(71,28): warning C4267:  “初始化”: 从“size_t”转换到“int”，可能丢失数据
+\\Mac\桌面\github\opencv_practice\exp3\exp3_pro\exp3_pro.cpp(73,24): warning C4267:  “初始化”: 从“size_t”转换到“int”，可能丢失数据

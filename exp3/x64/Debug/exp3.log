@@ -1,0 +1,8 @@
+﻿  exp3.cpp
+\\Mac\桌面\github\opencv_practice\exp3\exp3.cpp(76,11): warning C4244: “初始化”: 从“double”转换到“float”，可能丢失数据
+\\Mac\桌面\github\opencv_practice\exp3\exp3.cpp(81,12): warning C4244: “初始化”: 从“float”转换到“short”，可能丢失数据
+\\Mac\桌面\github\opencv_practice\exp3\exp3.cpp(85,12): warning C4244: “初始化”: 从“double”转换到“float”，可能丢失数据
+\\Mac\桌面\github\opencv_practice\exp3\exp3.cpp(89,13): warning C4244: “初始化”: 从“float”转换到“short”，可能丢失数据
+\\Mac\桌面\github\opencv_practice\exp3\exp3.cpp(224,40): warning C4244: “参数”: 从“double”转换到“int”，可能丢失数据
+\\Mac\桌面\github\opencv_practice\exp3\exp3.cpp(224,29): warning C4244: “参数”: 从“double”转换到“int”，可能丢失数据
+  exp3.vcxproj -> \\Mac\桌面\github\opencv_practice\exp3\x64\Debug\exp3.exe
